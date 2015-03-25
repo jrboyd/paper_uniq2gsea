@@ -5,7 +5,7 @@
 
 ##parameters
 #name of heatmap pdf
-pdfName = 'output_all/gsea_uniquely_enriched.pdf'
+pdfName = 'output_pooled/gsea_uniquely_enriched.pdf'
 #starting pvalue - will be reduced until multiple gsea lists pass
 pthresh = 9
 #bg size, all detected?  all passing FE?  all genes?
@@ -15,6 +15,9 @@ bg_size = 20000
 load('data_intermediate///uniquely_membership.save')
 load('ref//gsea_dataset.save')
 source('scripts/heatmap.3-split.R')
+
+if(!file.exists(dirname(pdfName)))
+  dir.create(dirname(pdfName))
 
 gsea_passing = list()
 uniq_passing = list()
@@ -99,6 +102,6 @@ heatmap.2(dat[keep,o], scale = 'n', dendrogram = 'n',  Colv = NA, margins = c(8,
 gsea_passing = names(keep)[keep]
 dev.off()
 #names(gsea_passing) = names(gsea_membs)
-save(gsea_passing, file = 'data_intermediate/gsea_passing.save')
+save(gsea_passing, file = 'data_intermediate/gsea_passing_pooled.save')
 #names(uniq_passing) = names(gsea_membs)
-save(uniq_passing, file = 'data_intermediate/uniq_passing.save')
+save(uniq_passing, file = 'data_intermediate/uniq_passing_pooled.save')

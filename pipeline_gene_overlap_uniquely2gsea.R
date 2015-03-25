@@ -5,8 +5,8 @@
 ##dependencies
 load('ref//gsea_dataset.save')
 load('data_intermediate///uniquely_membership.save')
-load('data_intermediate/gsea_passing.save')
-load('data_intermediate/uniq_passing.save')
+load('data_intermediate/gsea_passing_pooled.save')
+load('data_intermediate/uniq_passing_pooled.save')
 source('scripts//heatmap.3-split.R')
 
 o = c(4,1,7,5,2,8,6,3,9)#standard line order, ac - both - me

@@ -1,6 +1,16 @@
 #outputs all ngs profiles for gsea lists in gsea_passing.save.
 #separately plots groups in uniq_passing.save, highlighting whether mark trend hold for full gsea list.
 
+##dependencies
+source('functions_ngsplot.R')
+load('data_raw//mycounts_data.save')
+load('ref//dictionaries.save')
+load('data_raw//ngs_k4_data.save')
+NGS_SYMBOL_SET = rownames(ac_dat[[1]])
+load('ref//gsea_dataset.save')
+load('data_intermediate//gsea_passing_pooled.save')
+load('data_intermediate//uniq_passing_pooled.save')
+
 lines = c('MCF10A', 'MCF7', 'MDA231')
 library(RColorBrewer)
 l2col = RColorBrewer::brewer.pal(n = 3, 'Dark2')
@@ -16,15 +26,8 @@ other_mod = function(m){
   return('unrecognized mod')
 }
 
-load('data_raw//mycounts_data.save')
-load('ref//dictionaries.save')
-load('data_raw//ngs_k4_data.save')
-NGS_SYMBOL_SET = rownames(ac_dat[[1]])
-load('ref//gsea_dataset.save')
-load('data_intermediate//gsea_passing.save')
-load('data_intermediate//uniq_passing.save')
 
-outdir_name = 'output_all'
+outdir_name = 'output_pooled'
 if(!file.exists(outdir_name))
   dir.create(outdir_name)
 load('data_intermediate//uniquely_membership.save')
