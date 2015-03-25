@@ -2,6 +2,7 @@
 #a heatmap of -log10 pvals is written to pdf (gsea lists are rows, uniq groups are columns)
 #gsea lists passing a threshold are added to gsea_passing.save
 #the corresponding best uniquely group is added to uniq_passing.save
+
 ##parameters
 #name of heatmap pdf
 pdfName = 'output_all/gsea_uniquely_enriched.pdf'
