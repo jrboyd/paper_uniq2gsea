@@ -31,7 +31,7 @@ outdir_name = 'output_pooled'
 if(!file.exists(outdir_name))
   dir.create(outdir_name)
 load('data_intermediate//uniquely_membership.save')
-grp_name = 'All'
+grp_name = 'pooled'
 grp = gsea_passing
 dir_name = paste(outdir_name, '//ngs_', grp_name, sep = '')
 #membership = gsea_membs[[grp_name]]
@@ -60,7 +60,7 @@ if(!file.exists(dir_name))
 for(j in 1:length(grp)){
   list_name = grp[j]
   fname = paste(dir_name, '//', list_name, '.pdf', sep = '')
-  pdf(fname, width = 10)
+  pdf(fname, width = 10, height = 8)
   toPlot = membership[,list_name]
   toPlot = names(toPlot)[toPlot] #character vector of gene symbols in list
   best_uniq = best_uniques[j]

@@ -42,6 +42,8 @@ plotNGS_wBG = function(fg_ENSGcut_list, bg_ENSGcut_list, list_name, sel_name = '
   par(mai = c(0,1,0,.2))
   fg_lwd = 3
   bg_lwd = 3
+  bg_lty = 2
+  bg_pch = 21
   
   xs = 0:100
   xs = (20 * xs) - 1000
@@ -73,23 +75,28 @@ plotNGS_wBG = function(fg_ENSGcut_list, bg_ENSGcut_list, list_name, sel_name = '
   legend(x = 0, y = .7,legend = lines, fill = l2col[lines], bty = 'n')
   legend(x = 0, y = .4,legend = c(paste(length(fg_keep), 'genes in', sel_name), paste(length(bg_keep), 'other genes in list')), lty = c(3,1), bty = 'n', lwd = 2)
   plot(c(0,1), type = 'n', xlim = c(-1000,1000), ylim = c(0,ymax), ylab = 'H3K4ac', lwd = 2, xaxt = 'n')
+  
   for(l in lines){
     ac_d = ac_dat[[l]]
-    lines(xs, colMeans(ac_d[fg_keep,]), col = l2col_bg[l], lwd = fg_lwd, lty = 3)
+    #points(xs, colMeans(ac_d[fg_keep,]), col = l2col[l], pch = 19, cex = 1)
+    #points(xs, colMeans(ac_d[fg_keep,]), col = l2col_bg[l], pch = 16, cex = 1)
+    lines(xs, colMeans(ac_d[fg_keep,]), col = l2col[l], lwd = bg_lwd, lty = bg_lty)
   }
   for(l in lines){
     ac_d = ac_dat[[l]]
-    lines(xs, colMeans(ac_d[bg_keep,]), col = l2col[l], lwd = bg_lwd, lty = 1)
+    lines(xs, colMeans(ac_d[bg_keep,]), col = l2col[l], lwd = fg_lwd, lty = 1)
   }
   
   plot(c(0,1), type = 'n', xlim = c(-1000,1000), ylim = c(0,ymax), ylab = 'H3K4me3', lwd = 2)
   for(l in lines){
     me_d = me_dat[[l]]
-    lines(xs, colMeans(me_d[fg_keep,]), col = l2col_bg[l], lwd = fg_lwd, lty = 3)
+    #points(xs, colMeans(me_d[fg_keep,]), col = l2col[l], pch = 19, cex = 1)
+    #points(xs, colMeans(me_d[fg_keep,]), col = l2col_bg[l], pch = 16, cex = 1)
+    lines(xs, colMeans(me_d[fg_keep,]), col = l2col[l], lwd = bg_lwd, lty = bg_lty)
   }
   for(l in lines){
     me_d = me_dat[[l]]
-    lines(xs, colMeans(me_d[bg_keep,]), col = l2col[l], lwd = bg_lwd, lty = 1)
+    lines(xs, colMeans(me_d[bg_keep,]), col = l2col[l], lwd = fg_lwd, lty = 1)
   }
   
   plot(c(0,1),c(0,1), type = 'n', axes = F, xlab = '', ylab = '')

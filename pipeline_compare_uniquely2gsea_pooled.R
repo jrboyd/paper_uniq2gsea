@@ -4,6 +4,8 @@
 #the corresponding best uniquely group is added to uniq_passing.save
 
 ##parameters
+#must be true to update input for ngsplots
+updatePassing = F
 #name of heatmap pdf
 pdfName = 'output_pooled/gsea_uniquely_enriched.pdf'
 #starting pvalue - will be reduced until multiple gsea lists pass
@@ -53,10 +55,10 @@ rownames(toPlot) = colnames(uniquely_K4_membership)
 colnames(toPlot) = colnames(gsea_membership)
 
 for(j in 1:ncol(uniquely_K4_membership)){
-  keep = rownames(uniquely_K4_membership)[uniquely_K4_membership[,j]]
+  keep = rownames(uniquely_K4_membership)[uniquely_K4_membership[,j]]#gene symbols positive in this uniquely group
   uniq_size = length(keep)
-  keep = intersect(keep, rownames(gsea_membership))
-  gsea_hits = colSums(gsea_membership[keep,])
+  keep = intersect(keep, rownames(gsea_membership))#filter out symbols that don't occur in gsea
+  gsea_hits = colSums(gsea_membership[keep,])#number of genes in from uniquely group that occur in each gsea list
   perc_in_gsea = gsea_hits / length(keep)
   #o = order(perc_in_gsea, decreasing = T)
   #plot(perc_in_gsea[o])
@@ -98,10 +100,46 @@ title = paste(
   '\n', format(byChance, nsmall = 2), ' expected by chance',
   sep = '')
 pdf(pdfName, width = 9)
-heatmap.2(dat[keep,o], scale = 'n', dendrogram = 'n',  Colv = NA, margins = c(8,20), cexRow = .7, cexCol = .6, trace = 'n', col = colors, main = title, key.title = '', density.info = 'n')
+
+
+dat = dat[keep,o]
+clust = hclust(dist(dat))
+dat = dat[rev(clust$order),]
+noteText = t(toPlot[o,rownames(dat)])
+
+cr = colorRamp(c('black', 'red'))
+noteColors = cr(t(dat) / max(dat))
+noteColors = rgb(noteColors / 255)
+noteColors = t(matrix(noteColors, nrow = length(o), ncol = sum(keep), byrow = F))
+tmp = character()
+for(i in nrow(dat):1){
+  tmp = c(tmp, noteColors[i,])
+}
+noteColors = tmp
+#noteColors = rgb(cr(1:10/10) / 255)
+
+heatmap.2(
+  dat,
+  labRow = paste0('(', colSums(gsea_membership[,rownames(dat)]), ') ', rownames(dat)),
+  labCol = paste0(colnames(dat), ' (', colSums(uniquely_K4_membership[,colnames(dat)]), ') '),
+  cellnote = noteText,
+  notecol = noteColors,
+  scale = 'n',
+  dendrogram = 'n',
+  Colv = NA,
+  Rowv = NA,
+  margins = c(8,20),
+  cexRow = 1, cexCol = 1.4,
+  trace = 'n',
+  col = colors,
+  colsep = c(3,6),
+  sepcolor = 'black',
+  main = title,
+  key.title = '', density.info = 'n')
 gsea_passing = names(keep)[keep]
 dev.off()
-#names(gsea_passing) = names(gsea_membs)
-save(gsea_passing, file = 'data_intermediate/gsea_passing_pooled.save')
-#names(uniq_passing) = names(gsea_membs)
-save(uniq_passing, file = 'data_intermediate/uniq_passing_pooled.save')
+
+if(updatePassing){
+  save(gsea_passing, file = 'data_intermediate/gsea_passing_pooled.save')
+  save(uniq_passing, file = 'data_intermediate/uniq_passing_pooled.save')
+}
