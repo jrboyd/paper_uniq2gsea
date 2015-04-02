@@ -1,0 +1,3 @@
+[submodule "jrb_R_scripts"]
+	path = jrb_R_scripts
+	url = https://github.com/jrboyd/jrb_R_scripts.git
