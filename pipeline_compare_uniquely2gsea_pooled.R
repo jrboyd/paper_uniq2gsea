@@ -8,14 +8,15 @@
 updatePassing = F
 #name of heatmap pdf
 pdfName = 'output_pooled/gsea_uniquely_enriched.pdf'
-savePlot = F
+savePlot = T
 #starting pvalue - will be reduced until multiple gsea lists pass
 pthresh = 9
 #bg size, all detected?  all passing FE?  all genes?
 bg_size = 20000
 
 ##dependencies
-load('data_intermediate///uniquely_membership.save')
+#load('data_intermediate///uniquely_membership.save')
+load('data_intermediate/fe_uniquely.save')
 load('ref//gsea_dataset.save')
 source('scripts/heatmap.3-split.R')
 
@@ -90,6 +91,7 @@ tmp = apply(dat[keep,], 1, function(x)return((1:length(x))[x == max(x)]))#uniq c
 tmp = colnames(dat)[tmp]
 uniq_passing = tmp
 o = c(4,1,7,5,2,8,6,3,9)
+o = 1:9
 cr = colorRamp(c('white','blue'))
 colors = cr(x = (0:13^2)^.5/10 - .3)
 colors = ifelse(is.na(colors), 255, colors)
@@ -117,7 +119,7 @@ for(i in nrow(dat):1){
 }
 noteColors = tmp
 #noteColors = rgb(cr(1:10/10) / 255)
-if(savePlot) pdf(pdfName, width = 9)
+if(savePlot) pdf(pdfName, width = 9, height = nrow(dat)/6+3)
 heatmap.2(
   dat,
   labRow = paste0('(', colSums(gsea_membership[,rownames(dat)]), ') ', rownames(dat)),

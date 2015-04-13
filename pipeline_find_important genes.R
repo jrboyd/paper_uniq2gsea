@@ -7,12 +7,14 @@
 #must be true to update input for ngsplots
 updatePassing = F
 #name of heatmap pdf
-pdfName = 'output_pooled/gsea_uniquely_enriched.pdf'
-savePlot = F
+pdfName = 'output_pooled/gsea_important_genes.pdf'
+savePlot = T
 #starting pvalue - will be reduced until multiple gsea lists pass
 pthresh = 9
 #bg size, all detected?  all passing FE?  all genes?
 bg_size = 20000
+#gene most be present in at least this many gsea lists
+min_shared = 4
 
 ##dependencies
 load('data_intermediate///uniquely_membership.save')
@@ -103,43 +105,205 @@ title = paste(
 
 
 dat = dat[keep,o]
-clust = hclust(dist(dat))
-dat = dat[rev(clust$order),]
-noteText = t(toPlot[o,rownames(dat)])
-
-cr = colorRamp(c('black', 'red'))
-noteColors = cr(t(dat) / max(dat))
-noteColors = rgb(noteColors / 255)
-noteColors = t(matrix(noteColors, nrow = length(o), ncol = sum(keep), byrow = F))
-tmp = character()
-for(i in nrow(dat):1){
-  tmp = c(tmp, noteColors[i,])
+gsea_membership_sig = gsea_membership[,rownames(dat)]
+keep = rowSums(gsea_membership_sig) > 0
+gsea_membership_sig = gsea_membership_sig[keep,]
+uniq_in_gsea_sig = uniquely_K4_membership[intersect(rownames(gsea_membership_sig), rownames(uniquely_K4_membership)),]
+uniq_in_gsea_sig = uniq_in_gsea_sig[,c(4,1,7,5,2,8,6,3,9)]
+if(savePlot) pdf(pdfName, width = 12, height = 8)
+for(i in 1:ncol(uniq_in_gsea_sig)){
+  uniq_members = rownames(uniq_in_gsea_sig)[uniq_in_gsea_sig[,i]]
+  toPlot = t(ifelse(gsea_membership_sig[uniq_members,], 1, 0))
+  r_order = order(rowSums(toPlot), decreasing = T)
+  c_order = order(colSums(toPlot), decreasing = T)
+  toPlot = toPlot[r_order, c_order]
+  
+  
+  j = 1
+  tot = 0
+  end = ncol(toPlot)
+  while(tot < ncol(toPlot) & j <= nrow(toPlot)){
+    start = tot + 1
+    o = order(toPlot[j,start:end], decreasing = T)
+    n = sum(toPlot[j,start:end])
+    #   if(n == 0)
+    #     next
+    
+    o = o + start - 1
+    tot = tot + n 
+    print(range(o))
+    
+    
+    toPlot[,start:end] = toPlot[,o, drop = F]
+    
+    j = j + 1
+    if(j > nrow(toPlot))
+      next
+    o = order(toPlot[j,start:tot], decreasing = F)
+    o = o + min(start, tot) - 1
+    print(range(o))
+    toPlot[,start:tot] = toPlot[,o, drop = F]
+  }
+  #toPlot = rbind(toPlot, colSums(toPlot))
+  heatmap.2((toPlot), scale = 'n', margins = c(4,34), cexCol = 20/ncol(toPlot),Colv = F, Rowv = F, col = c('white', 'black'), trace = 'n', dendrogram = 'n')
 }
-noteColors = tmp
-#noteColors = rgb(cr(1:10/10) / 255)
-if(savePlot) pdf(pdfName, width = 9)
-heatmap.2(
-  dat,
-  labRow = paste0('(', colSums(gsea_membership[,rownames(dat)]), ') ', rownames(dat)),
-  labCol = paste0(colnames(dat), ' (', colSums(uniquely_K4_membership[,colnames(dat)]), ') '),
-  cellnote = noteText,
-  notecol = noteColors,
-  scale = 'n',
-  dendrogram = 'n',
-  Colv = NA,
-  Rowv = NA,
-  margins = c(8,20),
-  cexRow = 1, cexCol = 1.4,
-  trace = 'n',
-  col = colors,
-  colsep = c(3,6),
-  sepcolor = 'black',
-  main = title,
-  key.title = '', density.info = 'n')
-gsea_passing = names(keep)[keep]
+
+layout(1)
+plot(0:1, 0:1, type = 'n', xlim = c(0,1), ylim = c(-0,10))
+cr = colorRamp(c('gray','black', 'orange','red'))
+for(i in 1:ncol(uniq_in_gsea_sig)){
+  uniq_members = rownames(uniq_in_gsea_sig)[uniq_in_gsea_sig[,i]]
+  toPlot = t(ifelse(gsea_membership_sig[uniq_members,], 1, 0))
+  r_order = order(rowSums(toPlot), decreasing = T)
+  c_order = order(colSums(toPlot), decreasing = T)
+  toPlot = toPlot[r_order, c_order]
+  
+  
+  j = 1
+  tot = 0
+  end = ncol(toPlot)
+  while(tot < ncol(toPlot) & j <= nrow(toPlot)){
+    start = tot + 1
+    o = order(toPlot[j,start:end], decreasing = T)
+    n = sum(toPlot[j,start:end])
+    #   if(n == 0)
+    #     next
+    
+    o = o + start - 1
+    tot = tot + n 
+    print(range(o))
+    
+    
+    toPlot[,start:end] = toPlot[,o, drop = F]
+    
+    j = j + 1
+    if(j > nrow(toPlot))
+      next
+    o = order(toPlot[j,start:tot], decreasing = F)
+    o = o + min(start, tot) - 1
+    print(range(o))
+    toPlot[,start:tot] = toPlot[,o, drop = F]
+  }
+  
+  colors = rgb(cr(colSums(toPlot) / max(colSums(toPlot)))/255)
+  text(.1*i,9.8, colnames(uniq_in_gsea_sig)[i],adj = c(1,1), cex = .4, col = rgb(0,109/255,44/255))
+  for(k in 1:ncol(toPlot)){
+    col = colors[k]
+    txt = colnames(toPlot)[k]
+    text(.1*i,9.5-(k-1)*.1, txt,adj = c(1,1), cex = .4, col = col)
+#     if(colSums(toPlot)[k] > 2)
+#       text(.3,10-(k-1)*.1, txt,adj = c(1,1), cex = ncol(toPlot)/150, col = col)
+  }
+  
+}
+
+
+layout(1)
+plot(0:1, 0:1, type = 'n', xlim = c(0,1), ylim = c(-0,10))
+cr = colorRamp(c('gray','black', 'orange','red'))
+for(i in 1:ncol(uniq_in_gsea_sig)){
+  uniq_members = rownames(uniq_in_gsea_sig)[uniq_in_gsea_sig[,i]]
+  toPlot = t(ifelse(gsea_membership_sig[uniq_members,], 1, 0))
+  r_order = order(rowSums(toPlot), decreasing = T)
+  c_order = order(colSums(toPlot), decreasing = T)
+  toPlot = toPlot[r_order, c_order]
+  
+  
+  j = 1
+  tot = 0
+  end = ncol(toPlot)
+  while(tot < ncol(toPlot) & j <= nrow(toPlot)){
+    start = tot + 1
+    o = order(toPlot[j,start:end], decreasing = T)
+    n = sum(toPlot[j,start:end])
+    #   if(n == 0)
+    #     next
+    
+    o = o + start - 1
+    tot = tot + n 
+    print(range(o))
+    
+    
+    toPlot[,start:end] = toPlot[,o, drop = F]
+    
+    j = j + 1
+    if(j > nrow(toPlot))
+      next
+    o = order(toPlot[j,start:tot], decreasing = F)
+    o = o + min(start, tot) - 1
+    print(range(o))
+    toPlot[,start:tot] = toPlot[,o, drop = F]
+  }
+  colors = rgb(cr(colSums(toPlot) / max(colSums(toPlot)))/255)
+  text(.1*i,9.8, colnames(uniq_in_gsea_sig)[i],adj = c(1,1), cex = .4, col = rgb(0,109/255,44/255))
+  for(k in 1:ncol(toPlot)){
+    col = colors[k]
+    txt = colnames(toPlot)[k]
+    #text(.1*i,10-(k-1)*.1, txt,adj = c(1,1), cex = .4, col = col)
+         if(colSums(toPlot)[k] >= min_shared)
+           text(.1*i,9.5-(k-1)*.1, txt,adj = c(1,1), cex = .4, col = col)
+  }
+  
+}
+
+layout(1)
+plot(0:1, 0:1, type = 'n', xlim = c(0,1), ylim = c(-0,10))
+cr = colorRamp(c('gray','black', 'orange','red'))
+output = character(length = ncol(uniq_in_gsea_sig))
+names(output) = colnames(uniq_in_gsea_sig)
+for(i in 1:ncol(uniq_in_gsea_sig)){
+  uniq_members = rownames(uniq_in_gsea_sig)[uniq_in_gsea_sig[,i]]
+  toPlot = t(ifelse(gsea_membership_sig[uniq_members,], 1, 0))
+  r_order = order(rowSums(toPlot), decreasing = T)
+  c_order = order(colSums(toPlot), decreasing = T)
+  toPlot = toPlot[r_order, c_order]
+  
+  
+  j = 1
+  tot = 0
+  end = ncol(toPlot)
+  while(tot < ncol(toPlot) & j <= nrow(toPlot)){
+    start = tot + 1
+    o = order(toPlot[j,start:end], decreasing = T)
+    n = sum(toPlot[j,start:end])
+    #   if(n == 0)
+    #     next
+    
+    o = o + start - 1
+    tot = tot + n 
+    print(range(o))
+    
+    
+    toPlot[,start:end] = toPlot[,o, drop = F]
+    
+    j = j + 1
+    if(j > nrow(toPlot))
+      next
+    o = order(toPlot[j,start:tot], decreasing = F)
+    o = o + min(start, tot) - 1
+    print(range(o))
+    toPlot[,start:tot] = toPlot[,o, drop = F]
+  }
+  colors = rgb(cr(colSums(toPlot) / max(colSums(toPlot)))/255)
+  text(.1*i,9.8, colnames(uniq_in_gsea_sig)[i],adj = c(1,1), cex = .4, col = rgb(0,109/255,44/255))
+  l = 1
+  for(k in 1:ncol(toPlot)){
+    col = colors[k]
+    txt = colnames(toPlot)[k]
+    #text(.1*i,10-(k-1)*.1, txt,adj = c(1,1), cex = .4, col = col)
+    if(colSums(toPlot)[k] >= min_shared){
+      text(.1*i,9.5-(l-1)*.25, txt,adj = c(1,1), cex = .7, col = col)
+      l = l + 1
+    }
+  }
+  keep = colSums(toPlot) >= min_shared
+  tmp = colnames(toPlot)[keep]
+  output[i] = paste(tmp, collapse = ',')
+  
+}
+output = paste(names(output), output, sep = ',', collapse = '\n')
+write.table(output, file = 'important_genes.csv', col.names = F, row.names = F, quote = F)
 if(savePlot) dev.off()
 
-if(updatePassing){
-  save(gsea_passing, file = 'data_intermediate/gsea_passing_pooled.save')
-  save(uniq_passing, file = 'data_intermediate/uniq_passing_pooled.save')
-}
+
+
